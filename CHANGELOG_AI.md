@@ -205,3 +205,52 @@ Notes:            Remaining blocker (unrelated to this fix): the Taaffeíta
                   approved contact destination exists yet. Tracked in Linear
                   2TR-66, not blocking this deployment's own completion.
 ---
+Date:             2026-07-17
+Issue:            2TR-66
+Change:           Connect the Taaffeíta evaluation-call CTA to a real TidyCal
+                  booking link, replacing the disabled placeholder button.
+Why:              An approved contact destination now exists
+                  (https://tidycal.com/anibalcolon/taaffeita), resolving the
+                  blocker flagged in the previous deployment entry. The
+                  disabled "Canal de solicitud próximamente" button is no
+                  longer accurate and should link directly to booking.
+Files changed:    index.html
+Changes:          In the #contact section: kept the heading "¿Buscas
+                  acompañamiento privado 1-1?" unchanged. Replaced the body
+                  paragraph with the approved copy, appending "Agenda una
+                  llamada de evaluación para confirmar si existe buen encaje."
+                  Replaced the disabled
+                  <button type="button" disabled aria-disabled="true"> with
+                  an active <a class="button"
+                  href="https://tidycal.com/anibalcolon/taaffeita"
+                  target="_blank" rel="noopener noreferrer">Solicitar
+                  evaluación 1-1</a>. No other markup, CSS, or JS was
+                  touched. The now-unused `.button:disabled` CSS rule (added
+                  in the previous change) was intentionally left in place --
+                  harmless dead code, costs nothing, and removing it was not
+                  requested. Blueprint ($899) and Diamond ($3,995) Stripe
+                  CTAs were not touched.
+Testing:          grep confirmed exactly one occurrence of
+                  href="https://tidycal.com/anibalcolon/taaffeita" with
+                  target="_blank" and rel="noopener noreferrer" present on
+                  the same element. Zero remaining occurrences of "Canal de
+                  solicitud próximamente" or a `disabled` HTML attribute
+                  (the one remaining "disabled" match in the file is the
+                  pre-existing `.button:disabled` CSS rule, not an element).
+                  Zero occurrences of `mailto:` and zero `<form` tags in the
+                  file. Both Stripe links confirmed byte-for-byte unchanged.
+                  Python HTMLParser tag-balance check: zero unclosed/
+                  mismatched tags. Local static server smoke test: HTTP 200,
+                  86,936 bytes, zero <form> tags in served output, new CTA
+                  text "Solicitar evaluación 1-1" present verbatim. Viewport
+                  meta tag and both responsive breakpoints (max-width:1000px,
+                  max-width:700px) confirmed unchanged. `git diff --check`
+                  clean before commit.
+Rollback:         git revert this commit restores the disabled placeholder
+                  button and prior body copy exactly. Not pushed or deployed
+                  as part of this change -- see Linear 2TR-66 for current
+                  deployment status at the time this change ships.
+Notes:            Commit created locally only, after the diff was shown.
+                  Push and deploy remain separate, explicitly-approved steps
+                  not taken here.
+---
