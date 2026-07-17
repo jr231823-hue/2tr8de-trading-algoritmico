@@ -158,3 +158,50 @@ Notes:            Commit created only after the diff was shown and approved.
                   Push and deploy remain separate, explicitly-approved steps
                   not taken here.
 ---
+Date:             2026-07-17
+Issue:            2TR-66
+Change:           Push commit 00f0088 and deploy it to production
+                  (2tr8de.com / www.2tr8de.com).
+Why:              Approved to complete the production deployment block for
+                  the disabled-CTA fix.
+Files changed:    None (deployment/verification only; no code change).
+Deployment:       git push origin main -- fast-forward 5b75ecf..00f0088,
+                  confirmed via git ls-remote that origin/main now points at
+                  00f00883a66b3de9d8d2315d84274bb45ee46f1f. Note: this GitHub
+                  repository is bound to a Cloudflare Pages project in a
+                  different Cloudflare account (the one that auto-deploys on
+                  push); the project actually serving 2tr8de.com/www is a
+                  direct-upload project in the correct account (the one
+                  owning the 2tr8de.com zone) and does not auto-deploy from
+                  GitHub. Deployed the same approved commit to that project
+                  via `git archive 00f0088 | tar -x` + `wrangler pages
+                  deploy`, specifying --commit-hash=00f00883a66b3de9d8d2315
+                  d84274bb45ee46f1f to keep deployment metadata accurate.
+Production verification: A ~10-15s edge-propagation delay was observed on
+                  the 2tr8de.com custom domain immediately after deploy (the
+                  new deployment was already live at its own *.pages.dev URL
+                  and the project's default pages.dev alias instantly; the
+                  custom domain briefly kept serving the prior deployment,
+                  cf-cache-status: DYNAMIC once current). After that delay:
+                  https://2tr8de.com -> HTTP 200, 86,834 bytes, zero <form>
+                  tags, zero "mailto:", disabled button text exact ("Canal de
+                  solicitud próximamente"), both Stripe links byte-for-byte
+                  exact. https://www.2tr8de.com -> HTTP 200, identical
+                  content and checks, unchanged behavior otherwise. Zoho MX
+                  (mx.zoho.com/mx2/mx3), SPF, and the "zoho" DKIM selector
+                  confirmed byte-for-byte unchanged. bc.2tr8de.com and
+                  cf2mail.2tr8de.com CNAMEs confirmed unchanged. No DNS,
+                  redirect rule, email record, or unrelated infrastructure
+                  was touched by this deployment.
+Rollback:         Code rollback: git revert 00f0088, then redeploy via the
+                  same git archive + wrangler pages deploy path (or push and
+                  wait for the other account's auto-deploy, then re-run the
+                  manual deploy step here). Rollback commit target if needed:
+                  5b75ecf (previous production state, includes the
+                  demonstrative form). DNS/zone/email were not touched by
+                  this deployment and require no rollback.
+Notes:            Remaining blocker (unrelated to this fix): the Taaffeíta
+                  1-to-1 application channel is still "próximamente" -- no
+                  approved contact destination exists yet. Tracked in Linear
+                  2TR-66, not blocking this deployment's own completion.
+---
