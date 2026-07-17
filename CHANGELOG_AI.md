@@ -97,3 +97,64 @@ Notes:            Cloudflare Pages custom-domain attachment for this zone
                   Cloudflare DNS API. See Linear 2TR-66 for the exact record
                   values requested for the apex/www cutover.
 ---
+Date:             2026-07-17
+Issue:            2TR-66
+Change:           Remove the demonstrative contact form and replace it with a
+                  disabled Taaffeíta CTA block (no fake destination).
+Why:              The #contact section's form was explicitly marked as
+                  demonstrative ("Este formulario es demostrativo...") and its
+                  submit handler only showed a fake success message -- no data
+                  was ever sent or received. Now that the site is live in
+                  production on 2tr8de.com, keeping it live created a false
+                  submission experience for real visitors. A bare `mailto:`
+                  link was considered as an interim CTA target and explicitly
+                  rejected before commit: it would open a blank-recipient mail
+                  compose window, which is its own kind of false affordance.
+                  A disabled button with honest "coming soon" copy was chosen
+                  instead so the CTA never implies a working destination that
+                  does not exist yet.
+Files changed:    index.html
+Changes:          Replaced the entire #contact section (title, disclaimer
+                  paragraph, "Programa seleccionado" selector readout, and the
+                  6-field <form id="diagnosticForm">) with a plain CTA block:
+                  heading "¿Buscas acompañamiento privado 1-1?", the approved
+                  Taaffeíta body copy, and a real, non-clickable
+                  <button type="button" disabled aria-disabled="true"> reading
+                  "Canal de solicitud próximamente" -- no mailto:, no href="#",
+                  no invented destination of any kind. Removed the now-orphaned
+                  JS: the [data-program] click handler that wrote into
+                  #selectedProgram, and the #diagnosticForm submit handler
+                  that faked a success state. Added one small additive CSS
+                  rule, `.button:disabled` (+`:hover` override), reusing the
+                  existing --panel2/--muted/--line design tokens so the
+                  disabled state is visibly distinct (dimmed, muted colors,
+                  not-allowed cursor, no hover lift) while keeping the same
+                  size/shape/font-weight as every other .button on the page --
+                  no new class, no new tokens. The #contact section id and
+                  .contact-card grid layout are reused unchanged. Blueprint
+                  ($899) and Diamond ($3,995) Stripe CTAs were not touched.
+                  The Taaffeíta "Solicitar acceso" link elsewhere on the page
+                  (href="#contact" data-program="Taaffeíta") still points at
+                  #contact and still works as a plain anchor; its now-unused
+                  data-program attribute was left in place (harmless, no
+                  functional effect) rather than touching an unrelated line.
+Testing:          grep confirmed zero remaining references to
+                  diagnosticForm/selectedProgram/formStatus, any
+                  "demostrativo"/"ningún dato" text, and no `mailto:` anywhere
+                  in the file. Both Stripe links confirmed byte-for-byte
+                  unchanged. Python HTMLParser tag-balance check: zero
+                  unclosed/mismatched tags. Local static server smoke test run
+                  twice (once per CTA iteration): HTTP 200, zero <form> tags
+                  in the served output, final disabled-button text present
+                  verbatim. Viewport meta tag and both responsive breakpoints
+                  (max-width:1000px, max-width:700px) confirmed unchanged, so
+                  desktop/mobile layout behavior for the rest of the page is
+                  unaffected. git diff --check clean before commit.
+Rollback:         git revert this commit restores the demonstrative form, its
+                  JS handlers, and removes the .button:disabled rule exactly.
+                  Not deployed as part of this change -- see Linear 2TR-66 for
+                  current deployment status at the time this change ships.
+Notes:            Commit created only after the diff was shown and approved.
+                  Push and deploy remain separate, explicitly-approved steps
+                  not taken here.
+---
